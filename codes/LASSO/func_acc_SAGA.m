@@ -8,12 +8,13 @@ itsprint(sprintf('      step %09d: norm(ek) = %.3e...', 1,1), 1);
 n = para.n;
 m = para.m;
 W = para.W;
-gamma = para.c_gamma * para.beta_fi;
+gamma0 = para.c_gamma * para.beta_fi;
+gamma = gamma0;
 tau = para.mu * gamma;
 
 % stop cnd, max iteration
 tol = para.tol;
-maxits = 1.0*para.maxits;
+maxits = para.maxits;
 
 % initial point
 x0 = zeros(n, 1);
@@ -34,6 +35,8 @@ ek = zeros(maxits, 1);
 fk = zeros(maxits, 1);
 sk = zeros(maxits, 1);
 gk = zeros(maxits, 1);
+
+g_flag = 1;
 
 x = x0; % xk
 
@@ -71,7 +74,7 @@ while(its<=maxits)
     sk(its) = sum(abs(x)>0);
     gk(its) = gamma;
     
-    if (mod(its, m)==0)&&(var(sk(its-m+1:its))<1e-1)
+    if g_flag&&(mod(its, m)==0)&&(var(sk(its-m+1:its))<1)
         PT = diag(double(abs(x)>0));
         WT = W*PT;
         b = zeros(m, 1);
@@ -79,10 +82,19 @@ while(its<=maxits)
             WTi = WT(i,:);
             b(i) = norm(WTi)^2;
         end
-        beta_fi = 1 /max(b);
+        beta_fi_new = 1 /max(b);
         
-        gamma = max(para.c_gamma * beta_fi /10, gamma);
+        E = beta_fi_new /para.beta_fi;
+        g_flag = 0;
+        
+    end
+    
+    if (~g_flag)&&(mod(its, 2*m)==0)
+        
+        gamma = min(gamma*2, E*gamma0);
+        % gamma = para.c_gamma * beta_fi_new /2 /exp(1 - its/maxits);
         tau = para.mu * gamma;
+        
     end
     
     %%% stop?

@@ -1,27 +1,50 @@
 clear all
 close all
 clc
+%%
+strA = {'australian_label.mat', 'mushrooms_label.mat', 'gisette_label.mat'};
+strB = {'australian_sample.mat', 'mushrooms_sample.mat', 'gisette_sample.mat'};
+
+strF = {'australian', 'mushrooms', 'gisette'};
+
+i_file = 2;
+%% load and scale data
+class_name = strA{i_file};
+feature_name = strB{i_file};
+
+filename = strF{i_file};
+
+load(['../data/', class_name]);
+load(['../data/', feature_name]);
+
+h = full(h);
+
+% rescale the data
+fprintf(sprintf('rescale data...\n'));
+itsprint(sprintf('      column %06d...', 1), 1);
+for j=1:size(h,2)
+    h(:,j) = rescale(h(:,j), -1, 1);
+    if mod(j,1e2)==0; itsprint(sprintf('      column %06d...', j), j); end
+end
+fprintf(sprintf('\nDONE!\n\n'));
+
+h = h(1:1:end, :);
+l = l(1:1:end);
 %% generating two clusters of points
-m = 128;
-d = m* 2;
+[m, d] = size(h);
 
-w_1 = randn(m/2, d)/2;
-w_2 = randn(m/2, d)/2;
-w_2 = w_2 + 1 + repmat(randn(m/2,1), 1,d);
+n = d + 1;
+para.m = m;
+para.n = n;
 
-w = [w_1; w_2];
-y = [-ones(m/2,1); ones(m/2,1)];
+para.W = [h, ones(m, 1)];
+para.y = l;
 
-W = [w, ones(m, 1)];
-
-para.mu = 1 /sqrt(m);
-para.beta = 4*m/ norm((W')*W);
-
-L_F = 1/para.beta;
+para.mu = 1e-4;
 
 b = zeros(m, 1);
 for i=1:m
-    Wi = W(i,:);
+    Wi = para.W(i,:);
     b(i) = norm(Wi)^2 /4;
 end
 para.beta_fi = 1 /max(b);
@@ -29,91 +52,91 @@ para.beta_fi = 1 /max(b);
 L = 1/para.beta_fi;
 
 para.tol = 1e-11; % stopping criterion
-para.maxits = 1e5; % max # of iteration
+para.maxits = 2e3*m; % max # of iteration
 
-para.W = W;
-para.y = y;
+GradF = @(x) grad_logistic(x, para.W, para.y) /m;
+iGradF = @(x, i) igrad_logistic(x, i, para.W, para.y);
 
-n = d + 1;
-para.m = m;
-para.n = n;
+ObjF = @(x) para.mu*sum(abs(x(1:end-1))) + func_logistic(x, para.W, para.y);
 
-GradF = @(x) grad_logistic(x, W, y) /m;
-Hess = @(x) hess_logistic(x, W, y);
-ProxJ = @(x, t) [wthresh(x(1:end-1), 's', t); x(end)];
-iGradF = @(x, i) igrad_logistic(x, i, W, y);
-%% Forward--Backward, finding a high precision solution
-para.c_gamma = 2;
-[xsol, ~, ek, ~, ~] = func_FB(para, GradF, ProxJ);
-
-fprintf('\n');
-%% Forward--Backward
-para.c_gamma = 2;
-[x, its, dk, sk, gamma] = func_FB_dk(para, GradF, ProxJ, xsol);
-
-fprintf('\n');
-%% computing the linear convergence rate of FBS
-H = Hess(xsol) /m;
-
-I = (abs(xsol)>0);
-kappa = sum(double(I));
-
-PTsol = diag(double(I));
-
-pHp = PTsol * H * PTsol;
-s = svd(pHp);
-
-alpha = s(kappa);
-
-PT = diag(double(abs(x)>0));
-WT = W*PT;
-bsol = zeros(m, 1);
-for i=1:m
-    WTi = WT(i,:);
-    bsol(i) = norm(WTi)^2 /4;
-end
-beta_fi = 1 /max(bsol);
-Lsol = max(bsol);
+outputType = 'pdf';
 %% SAGA, without acceleration
-para.c_gamma = 1/2;
+para.c_gamma = 1/3;
 
-[x1, its1, dk1, sk1, gamma1] = func_SAGA(para, GradF,iGradF, ProxJ, xsol);
+[x1, its1, ek1, fk1, sk1, gk1] = func_SAGA(para, iGradF, ObjF);
 
 fprintf('\n');
 %% SAGA, adapt to local Lipschitz const.
-para.c_gamma = 1/2;
+para.c_gamma = 1/3;
 
-[x1a, its1a, dk1a, sk1a, gamma1a] = func_acc_SAGA(para, GradF,iGradF, ProxJ, xsol);
+[x1a, its1a, ek1a, fk1a, sk1a, gk1a, vk1a] = func_acc_SAGA(para, iGradF, ObjF);
 
 fprintf('\n');
 %% Prox-SVRG, without acceleration
 para.P = m;
-para.c_gamma = 1/3;
+para.c_gamma = 1/4;
 
-[x2, its2,t2, dl2,dk2, sk2, gamma2] = func_SVRG(para, GradF,iGradF, ProxJ, xsol);
+[x2, its2, ek2, fk2, sk2, gk2] = func_SVRG(para, GradF,iGradF, ObjF);
 
 fprintf('\n');
 %% Prox-SVRG, adapt to local Lipschitz const.
 para.P = m;
-para.c_gamma = 1/3;
+para.c_gamma = 1/4;
 
-[x2a, its2a,t2a, dl2a,dk2a, sk2a, gamma2a] = func_acc_SVRG(para, GradF,iGradF, ProxJ, xsol);
+[x2a, its2a, ek2a, fk2a, sk2a, gk2a, vk2a] = func_acc_SVRG(para, GradF,iGradF, ObjF);
 
 fprintf('\n');
-%% rate estimation of SAGA, Prox-SVRG
-P = para.P;
+%% step-size
+linewidth = 1.25;
 
-rho_saga = sqrt( 1 - min( 1/(4*m), alpha/(3*L) ) );
-rho_svrg = min(1, ( L/ (alpha*L*gamma2*P*(1-4*L*gamma2)) ...
-    + (4*L*gamma2*(P+1))/((1-4*L*gamma2)*P) )^(2/P) );
+axesFontSize = 8;
+labelFontSize = 10;
+legendFontSize = 10;
 
-rho_fb_saga = 1 - gamma1*alpha;
-rho_fb_svrg = 1 - gamma2*alpha;
+resolution = 300; % output resolution
+output_size = 300 *[10, 8]; % output size
 
-k1 = floor( find(sk1==sk(end), 1) /m );
-k2 = floor( find(sk2==sk(end), 1) /m );
-%% convergence rate of ||x_k-x^\star||
-linewidth = 1;
+figure(100), clf;
+set(0,'DefaultAxesFontSize', axesFontSize);
+set(gcf,'paperunits','centimeters','paperposition',[-0.0 -0.025 output_size/resolution]);
+set(gcf,'papersize',output_size/resolution-[0.8 0.4]);
+
+
+p1 = plot(gk1(1:m:end), 'k', 'LineWidth',linewidth);
+hold on,
+p1a = plot(gk1a(1:m:end), 'k--', 'LineWidth',linewidth);
+
+p2 = plot(gk2(1:m:end), 'r', 'LineWidth',linewidth);
+
+p2a = plot(gk2a(1:m:end), 'r--', 'LineWidth',linewidth);
+
+grid on;
+ax = gca;
+ax.GridLineStyle = '--';
+
+axis([1, max(its1, its2)/m, 0 1.1*max(gk1a(end), gk2a(end))]);
+
+ylabel({'$\gamma_{k}$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
+xlabel({'\vspace{-0.0mm}';'$k/m$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
+
+lg = legend([p1,p1a, p2, p2a],...
+    sprintf('{SAGA}'), sprintf('{acc-SAGA}'),...
+    sprintf('{Prox-SVRG}'), sprintf('{acc-Prox-SVRG}'));
+set(lg,'Location', 'Best');
+set(lg,'FontSize', 10);
+legend('boxoff');
+set(lg, 'Interpreter', 'latex');
+
+epsname = sprintf('sagasvrg_slr_%s_gamma.%s', filename, outputType);
+if strcmp(outputType, 'png')
+    print(epsname, '-dpng');
+else
+    print(epsname, '-dpdf');
+end
+%% convergence of \Phi(x_{k}) -\Phi(x_{k-1})
+fsol = min([min(fk1), min(fk2)]);
+
+linewidth = 1.25;
 
 axesFontSize = 8;
 labelFontSize = 10;
@@ -127,52 +150,91 @@ set(0,'DefaultAxesFontSize', axesFontSize);
 set(gcf,'paperunits','centimeters','paperposition',[-0.0 -0.025 output_size/resolution]);
 set(gcf,'papersize',output_size/resolution-[0.8 0.4]);
 
-p1 = semilogy(dk1(1:m:end), 'Color',[0.1,0.1,0.1], 'LineWidth',linewidth);
+
+p1 = semilogy(fk1 - fsol, 'k', 'LineWidth',linewidth);
 hold on,
+p1a = semilogy(fk1a - fsol, 'k--', 'LineWidth',linewidth);
 
-gap = 1;
-p2 = semilogy(dk2(1:gap*m:end), 'Color',[0.99,0.1,0.1], 'LineWidth',linewidth);
+p2 = semilogy(fk2 - fsol, 'r', 'LineWidth',linewidth);
 
-p1a = semilogy(dk1a(1:m:end), '-.', 'Color',[0.1,0.1,0.1], 'LineWidth',linewidth);
-p2a = semilogy(dk2a(1:gap*m:end), '-.', 'Color',[0.99,0.1,0.1], 'LineWidth',linewidth);
-
-p3 = semilogy(k1:1e5, 2*dk1(k1*m)*(rho_fb_saga^m).^(0:1e5-k1), '--', 'Color',[0.1,0.1,0.1], 'LineWidth',linewidth);
-p4 = semilogy(k2:1e5, 2*dk2(k2*m)*(rho_fb_svrg^(gap*m)).^(0:1e5-k2), '--', 'Color',[0.99,0.1,0.1], 'LineWidth',linewidth);
-
+p2a = semilogy(fk2a - fsol, 'r--', 'LineWidth',linewidth);
 
 grid on;
 ax = gca;
 ax.GridLineStyle = '--';
 
-axis([1 max([its1/m, t2/m])-1.5e3 1e-8 1e0]);
-set(gca, 'yTick', [1e-8, 1e-5, 1e-2, 1e1]);
+axis([1, max(its1, its2)/m, 1e-5, 1e0]);
 
-ylabel({'$\|x_{k}-x^\star\|$'}, 'FontSize', labelFontSize,...
-    'FontAngle', 'normal', 'Interpreter', 'latex');
-xlabel({'\vspace{-1.0mm}';'$k/m$'}, 'FontSize', labelFontSize,...
-    'FontAngle', 'normal', 'Interpreter', 'latex');
 
-lg = legend([p1,p3, p1a, p2,p4,p2a],...
-    sprintf('{SAGA}, observation'),...
-    sprintf('{SAGA}, $\\rho_{_\\mathrm{FBS}}^{m}$'),...
-    sprintf('{SAGA}, acceleration'),...
-    sprintf('{Prox-SVRG}, observation'),...
-    sprintf('{Prox-SVRG}, $\\rho_{_\\mathrm{FBS}}^{m}$'),...
-    sprintf('{Prox-SVRG}, acceleration'));
-set(lg,'Location', 'Best');
-set(lg,'FontSize', 8);
+ylabel({'$\Phi(x_{k})-\Phi(x^\star)$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
+xlabel({'\vspace{-0.0mm}';'$k/m$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
+
+
+lg = legend([p1,p1a, p2, p2a],...
+    sprintf('{SAGA}'), sprintf('{acc-SAGA}'),...
+    sprintf('{Prox-SVRG}'), sprintf('{acc-Prox-SVRG}'));
+% set(lg,'Location', 'Best');
+set(lg,'FontSize', 10);
 legend('boxoff');
 set(lg, 'Interpreter', 'latex');
 
-pos = get(lg, 'Position');
-set(lg, 'Position', [pos(1)-0.07, pos(2)-0.04, pos(3)-0.08, pos(4)-0.065]);
-pos_ = get(lg, 'Position');
-
-
-pdfname = sprintf('LogisticRegression_saga_svrg_rate.png');
-print(pdfname, '-dpng');
-%% support of x_k
-linewidth = 1;
+epsname = sprintf('sagasvrg_slr_%s_objf.%s', filename, outputType);
+if strcmp(outputType, 'png')
+    print(epsname, '-dpng');
+else
+    print(epsname, '-dpdf');
+end
+%% convergence of ||x_{k} - x_{k-1}||
+% linewidth = 1.25;
+% 
+% axesFontSize = 8;
+% labelFontSize = 10;
+% legendFontSize = 10;
+% 
+% resolution = 300; % output resolution
+% output_size = 300 *[10, 8]; % output size
+% 
+% figure(102), clf;
+% set(0,'DefaultAxesFontSize', axesFontSize);
+% set(gcf,'paperunits','centimeters','paperposition',[-0.0 -0.025 output_size/resolution]);
+% set(gcf,'papersize',output_size/resolution-[0.8 0.4]);
+% 
+% 
+% p1 = semilogy(ek1, 'k', 'LineWidth',linewidth);
+% hold on,
+% p1a = semilogy(ek1a, 'k--', 'LineWidth',linewidth);
+% 
+% p2 = semilogy(ek2, 'r', 'LineWidth',linewidth);
+% 
+% p2a = semilogy(ek2a, 'r--', 'LineWidth',linewidth);
+% 
+% grid on;
+% ax = gca;
+% ax.GridLineStyle = '--';
+% 
+% % axis([1, max(its1, its2)/m, 1e-10, 1e0]);
+% 
+% 
+% ylabel({'$\Phi(x_{k})-\Phi(x^\star)$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
+% xlabel({'\vspace{-0.0mm}';'$k/m$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
+% 
+% 
+% lg = legend([p1,p1a, p2, p2a],...
+%     sprintf('{SAGA}'), sprintf('{acc-SAGA}'),...
+%     sprintf('{Prox-SVRG}'), sprintf('{acc-Prox-SVRG}'));
+% % set(lg,'Location', 'Best');
+% set(lg,'FontSize', 10);
+% legend('boxoff');
+% set(lg, 'Interpreter', 'latex');
+% 
+% epsname = sprintf('sagasvrg_slr_%s_ek.%s', filename, outputType);
+% if strcmp(outputType, 'png')
+%     print(epsname, '-dpng');
+% else
+%     print(epsname, '-dpdf');
+% end
+%% support
+linewidth = 1.25;
 
 axesFontSize = 8;
 labelFontSize = 10;
@@ -181,33 +243,36 @@ legendFontSize = 10;
 resolution = 300; % output resolution
 output_size = 300 *[10, 8]; % output size
 
-figure(102), clf;
+figure(103), clf;
 set(0,'DefaultAxesFontSize', axesFontSize);
-set(gcf,'paperunits','centimeters','paperposition',[-0.0 -0.02 output_size/resolution]);
-set(gcf,'papersize',output_size/resolution-[0.8 0.45]);
+set(gcf,'paperunits','centimeters','paperposition',[-0.0 0.05 output_size/resolution]);
+set(gcf,'papersize',output_size/resolution-[0.8 0.35]);
 
-p1 = plot(sk1(1:m:end), 'Color',[0.1,0.1,0.1], 'LineWidth',linewidth);
+p1 = plot(sk1(1:m:end), 'k', 'LineWidth',linewidth);
 hold on,
-p2 = plot(sk2(1:m:end), 'Color',[0.99,0.1,0.1], 'LineWidth',linewidth);
 
+p2 = plot(sk2(1:m:end), 'r--', 'LineWidth',linewidth);
 
 grid on;
 ax = gca;
 ax.GridLineStyle = '--';
 
-axis([1 max([its1, its2])/m sk(end)-2 sk(end)*2]);
+axis([1 max(its1, its2)/m floor(sk1(end)*3/4) 3*sk1(end)]);
 
-ylabel({'$|$supp($x_{k}$)$|$'}, 'FontSize', labelFontSize,...
-    'FontAngle', 'normal', 'Interpreter', 'latex');
-xlb = xlabel({'$$k/m$$';'\vspace{-0.2cm}'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
-set(xlb, 'Units', 'Normalized', 'Position', [1/2, -0.08, 0]);
+ylabel({'$|\mathrm{supp}(x_{k})|$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
+xlabel({'\vspace{-0.0mm}';'$k/m$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
 
-lg = legend([p1, p2], sprintf('SAGA'), sprintf('{Prox-SVRG}'));
+
+lg = legend([p1,p2],...
+    sprintf('{SAGA}'), sprintf('{Prox-SVRG}'));
 set(lg,'Location', 'Best');
-set(lg,'FontSize', 9);
+set(lg,'FontSize', 10);
 legend('boxoff');
 set(lg, 'Interpreter', 'latex');
 
-
-pdfname = sprintf('LogisticRegression_saga_svrg_support.png');
-print(pdfname, '-dpng');
+epsname = sprintf('sagasvrg_slr_%s_sk.%s', filename, outputType);
+if strcmp(outputType, 'png')
+    print(epsname, '-dpng');
+else
+    print(epsname, '-dpdf');
+end

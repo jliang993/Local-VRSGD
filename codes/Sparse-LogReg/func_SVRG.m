@@ -1,4 +1,4 @@
-function [x, its,t, dl,dk, sk, gamma] = func_SVRG(para, GradF,iGradF, ProxJ, xsol)
+function [x, t, ek, fk, sk, gk] = func_SVRG(para, GradF,iGradF, ObjF)
 %
 
 fprintf(sprintf('performing SVRG...\n'));
@@ -13,9 +13,8 @@ gamma = para.c_gamma * para.beta_fi;
 tau = para.mu * gamma;
 
 % stop cnd, max iteration
-ToL = 1e-9;
-maxits = 3e6;
-
+tol = para.tol;
+maxits = para.maxits;
 
 % initial point
 x0 = zeros(n, 1);
@@ -24,22 +23,26 @@ x0 = zeros(n, 1);
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 
-dl = zeros(1, maxits);
-dk = zeros(1, maxits);
-sk = zeros(1, maxits);
-
+ek = zeros(maxits, 1);
+sk = zeros(maxits, 1);
+gk = zeros(maxits, 1);
+fk = zeros(maxits, 1);
 
 x = x0;
 x_tilde = x;
 
+l = 0;
+
 its = 1;
 t = 1;
-while(its<maxits)
+while(its<maxits/m)
     
     mu = GradF(x_tilde);
     
     x = x_tilde;
     for p=1:P
+        
+        x_old = x;
         
         j = randsample(1:m,1);
         
@@ -51,11 +54,17 @@ while(its<maxits)
         
         x(end) = w(end);
         
-        distE = norm(x(:)-xsol(:), 'fro');
-        if mod(t,5e4)==0; itsprint(sprintf('      step %09d: norm(ek) = %.3e', t,distE), t); end
+        distE = norm(x(:)-x_old(:), 'fro');
+        if mod(t,1e3)==0; itsprint(sprintf('      step %09d: norm(ek) = %.3e', t,distE), t); end
+        
+        if mod(t, m)==0
+            l = l + 1;
+            fk(l) = ObjF(x);
+        end
         
         sk(t) = sum(abs(x) > 0);
-        dk(t) = distE;
+        gk(t) = gamma;
+        ek(t) = distE;
         
         t = t + 1;
         
@@ -64,17 +73,15 @@ while(its<maxits)
     x_tilde = x;
     
     %%% stop?
-    normE = norm(x_tilde(:)-xsol(:), 'fro');
-    % if mod(its,1e2)==0; itsprint(sprintf('      step %08d: norm(ek) = %.3e', its,normE), its); end
-    
-    dl(its) = normE;
-    if ((normE)<ToL)||(normE>1e10); break; end
+    normE = norm(x_tilde(:)-x_old(:), 'fro');
+    if ((normE)<tol)||(normE>1e10); break; end
     
     its = its + 1;
     
 end
 fprintf('\n');
 
-dl = dl(1:its-1);
 sk = sk(1:t-1);
-dk = dk(1:t-1);
+gk = gk(1:t-1);
+ek = ek(1:t-1);
+fk = fk(1:l);
