@@ -181,55 +181,6 @@ if strcmp(outputType, 'png')
 else
     print(epsname, '-dpdf');
 end
-%% convergence of ||x_{k} - x_{k-1}||
-% linewidth = 1.25;
-% 
-% axesFontSize = 8;
-% labelFontSize = 10;
-% legendFontSize = 10;
-% 
-% resolution = 300; % output resolution
-% output_size = 300 *[10, 8]; % output size
-% 
-% figure(102), clf;
-% set(0,'DefaultAxesFontSize', axesFontSize);
-% set(gcf,'paperunits','centimeters','paperposition',[-0.0 -0.025 output_size/resolution]);
-% set(gcf,'papersize',output_size/resolution-[0.8 0.4]);
-% 
-% 
-% p1 = semilogy(ek1, 'k', 'LineWidth',linewidth);
-% hold on,
-% p1a = semilogy(ek1a, 'k--', 'LineWidth',linewidth);
-% 
-% p2 = semilogy(ek2, 'r', 'LineWidth',linewidth);
-% 
-% p2a = semilogy(ek2a, 'r--', 'LineWidth',linewidth);
-% 
-% grid on;
-% ax = gca;
-% ax.GridLineStyle = '--';
-% 
-% % axis([1, max(its1, its2)/m, 1e-10, 1e0]);
-% 
-% 
-% ylabel({'$\Phi(x_{k})-\Phi(x^\star)$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
-% xlabel({'\vspace{-0.0mm}';'$k/m$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
-% 
-% 
-% lg = legend([p1,p1a, p2, p2a],...
-%     sprintf('{SAGA}'), sprintf('{acc-SAGA}'),...
-%     sprintf('{Prox-SVRG}'), sprintf('{acc-Prox-SVRG}'));
-% % set(lg,'Location', 'Best');
-% set(lg,'FontSize', 10);
-% legend('boxoff');
-% set(lg, 'Interpreter', 'latex');
-% 
-% epsname = sprintf('sagasvrg_lasso_%s_ek.%s', filename, outputType);
-% if strcmp(outputType, 'png')
-%     print(epsname, '-dpng');
-% else
-%     print(epsname, '-dpdf');
-% end
 %% support
 linewidth = 1.25;
 

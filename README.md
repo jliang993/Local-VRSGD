@@ -2,9 +2,9 @@
 
 Matlab code to reproduce the results of the paper
 
-Local Convergence Properties of SAGA/Prox-SVRG and Beyond
+[Local Convergence Properties of SAGA/Prox-SVRG and Beyond](http://proceedings.mlr.press/v80/poon18a.html)
 
-Clarice Poon, Jingwei Liang, Carola-Bibiane Schönlieb
+[Clarice Poon](http://www.damtp.cam.ac.uk/user/cmhsp2/), [Jingwei Liang](https://jliang993.github.io/), [Carola-Bibiane Schönlieb](http://www.damtp.cam.ac.uk/user/cbs31/Home.html)
 
 
 
@@ -24,11 +24,18 @@ Solution and its dual          |  Support identification of three different init
 
 ## Sparse Logistic Regression
 
+### Toy example
+
 Support identification of SAGA/Prox-SVRG          |  Local linear convergence of SAGA/Prox-SVRG
 :-------------------------:|:-------------------------:
-![ ](codes/Sparse-LogReg/LogisticRegression_saga_svrg_support.png)  |  ![ ](codes/Sparse-LogReg/LogisticRegression_saga_svrg_rate.png)
+![ ](codes/Sparse-LogReg/toy_sagasvrg_slr_sk.png)  |  ![ ](codes/Sparse-LogReg/toy_sagasvrg_slr_objf.png)
 
 
 
+## LASSO
+
+Support identification of SAGA/Prox-SVRG          |  Local linear convergence of SAGA/Prox-SVRG
+:-------------------------:|:-------------------------:
+![ ](codes/LASSO/sagasvrg_lasso_gisette_sk.png)  |  ![ ](codes/LASSO/sagasvrg_lasso_gisette_objf.png)
 
 Copyright (c) 2018 Clarice Poon and  Jingwei Liang
