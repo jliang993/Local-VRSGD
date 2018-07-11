@@ -7,7 +7,7 @@ strB = {'australian_sample.mat', 'mushrooms_sample.mat', 'gisette_sample.mat'};
 
 strF = {'australian', 'mushrooms', 'gisette'};
 
-i_file = 2;
+i_file = 1;
 %% load and scale data
 class_name = strA{i_file};
 feature_name = strB{i_file};
@@ -27,9 +27,6 @@ for j=1:size(h,2)
     if mod(j,1e2)==0; itsprint(sprintf('      column %06d...', j), j); end
 end
 fprintf(sprintf('\nDONE!\n\n'));
-
-h = h(1:1:end, :);
-l = l(1:1:end);
 %% generating two clusters of points
 [m, d] = size(h);
 
@@ -40,7 +37,7 @@ para.n = n;
 para.W = [h, ones(m, 1)];
 para.y = l;
 
-para.mu = 1e-4;
+para.mu = 1.0e-2;
 
 b = zeros(m, 1);
 for i=1:m
@@ -52,7 +49,7 @@ para.beta_fi = 1 /max(b);
 L = 1/para.beta_fi;
 
 para.tol = 1e-11; % stopping criterion
-para.maxits = 2e3*m; % max # of iteration
+para.maxits = 4e3*m; % max # of iteration
 
 GradF = @(x) grad_logistic(x, para.W, para.y) /m;
 iGradF = @(x, i) igrad_logistic(x, i, para.W, para.y);
@@ -163,7 +160,7 @@ grid on;
 ax = gca;
 ax.GridLineStyle = '--';
 
-axis([1, max(its1, its2)/m, 1e-5, 1e0]);
+axis([1, max(its1, its2)/m, 1e-12, 1e-2]);
 
 
 ylabel({'$\Phi(x_{k})-\Phi(x^\star)$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
@@ -184,55 +181,6 @@ if strcmp(outputType, 'png')
 else
     print(epsname, '-dpdf');
 end
-%% convergence of ||x_{k} - x_{k-1}||
-% linewidth = 1.25;
-% 
-% axesFontSize = 8;
-% labelFontSize = 10;
-% legendFontSize = 10;
-% 
-% resolution = 300; % output resolution
-% output_size = 300 *[10, 8]; % output size
-% 
-% figure(102), clf;
-% set(0,'DefaultAxesFontSize', axesFontSize);
-% set(gcf,'paperunits','centimeters','paperposition',[-0.0 -0.025 output_size/resolution]);
-% set(gcf,'papersize',output_size/resolution-[0.8 0.4]);
-% 
-% 
-% p1 = semilogy(ek1, 'k', 'LineWidth',linewidth);
-% hold on,
-% p1a = semilogy(ek1a, 'k--', 'LineWidth',linewidth);
-% 
-% p2 = semilogy(ek2, 'r', 'LineWidth',linewidth);
-% 
-% p2a = semilogy(ek2a, 'r--', 'LineWidth',linewidth);
-% 
-% grid on;
-% ax = gca;
-% ax.GridLineStyle = '--';
-% 
-% % axis([1, max(its1, its2)/m, 1e-10, 1e0]);
-% 
-% 
-% ylabel({'$\Phi(x_{k})-\Phi(x^\star)$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
-% xlabel({'\vspace{-0.0mm}';'$k/m$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
-% 
-% 
-% lg = legend([p1,p1a, p2, p2a],...
-%     sprintf('{SAGA}'), sprintf('{acc-SAGA}'),...
-%     sprintf('{Prox-SVRG}'), sprintf('{acc-Prox-SVRG}'));
-% % set(lg,'Location', 'Best');
-% set(lg,'FontSize', 10);
-% legend('boxoff');
-% set(lg, 'Interpreter', 'latex');
-% 
-% epsname = sprintf('sagasvrg_slr_%s_ek.%s', filename, outputType);
-% if strcmp(outputType, 'png')
-%     print(epsname, '-dpng');
-% else
-%     print(epsname, '-dpdf');
-% end
 %% support
 linewidth = 1.25;
 

@@ -68,7 +68,7 @@ while(its<maxits)
     sk(its) = sum(abs(x) > 0);
     gk(its) = gamma;
     
-    if (its>m)&&(mod(its, m)==0)&&(sk(its)<n/2)&&(var(sk(its-m+1:its))<1)
+    if (its>m)&&(mod(its, m)==0)&&(sk(its)<n/1.5)&&(var(sk(its-m+1:its))<1)
         PT = diag(double(abs(x)>0));
         WT = W*PT;
         b = zeros(m, 1);
