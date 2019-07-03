@@ -1,12 +1,13 @@
-function [x, its, ek, sk] = func_FB(x0, GradF, FBS)
+function [x, its, ek, sk, fk] = func_FB(x0, GradF, FBS, ObjF)
 
 maxits = 1e3;
 ToL = 1e-14;
 
 x = x0;
 
-ek = zeros(1, maxits);
-sk = zeros(1, maxits);
+ek = zeros(maxits, 1);
+sk = zeros(maxits, 1);
+fk = zeros(maxits, 1);
 
 its = 1;
 while(its<maxits)
@@ -24,6 +25,7 @@ while(its<maxits)
     
     ek(its) = normE;
     sk(its) = sum(abs(x)>0);
+    fk(its) = ObjF(x);
     
     its = its + 1;
     
@@ -33,3 +35,4 @@ fprintf('\n');
 its = its - 1;
 ek = ek(1:its);
 sk = sk(1:its);
+fk = fk(1:its);

@@ -22,6 +22,8 @@ for i=1:m
     G(:, i) = iGradF(x0, i);
 end
 
+mG = sum(G, 2)/m;
+
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -48,12 +50,13 @@ while(its<maxits)
     
     gj = iGradF(x_old, j);
     
-    w = x - gamma* (gj - gj_old) - gamma/m* sum(G, 2);
+    w = x - gamma* (gj - gj_old) - gamma*mG;
     x = wthresh(w, 's', tau);
     
     x(end) = w(end);
     
     G(:, j) = gj;
+    mG = (mG*m + gj - gj_old)/m;
     
     %%% stop?
     normE = norm(x(:)-x_old(:), 'fro');

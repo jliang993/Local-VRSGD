@@ -19,33 +19,56 @@ mu = 1/3;
 gamma = 1e0 *beta;
 tau = mu*gamma;
 
-maxits = 1e8 + 1;
+maxits = 1e7 + 1;
 ToL = 1e-15;
 
 FBS = @(x, g) ProxJ(x-gamma*g, tau);
 ProxSGD = @(x, g, gamma) ProxJ(x-gamma*g, mu*gamma);
+
+ObjF = @(x) mu*sum(abs(x)) + norm(A*x-y)^2 /6;
 %% deterministic FBS
 fprintf(sprintf('performing Forward--Backward...\n'));
 
 x0 = 1e1* y;
 
-[x1, its1, dk1, sk1] = func_FB(x0, GradF, FBS);
+[x1, its1, dk1, sk1, fk1] = func_FB(x0, GradF, FBS, ObjF);
 
 fprintf('\n');
 %% Prox-SGD, starting point 1
 fprintf(sprintf('performing Prox-SGD...\n'));
 x0 = -1e1* (-GradF(x1)/mu);
 
-[x2, its2, ek2, sk2] = func_ProxSGD(x0,y,A, gamma, ProxSGD);
+[x2, its2, ek2, sk2, fk2] = func_ProxSGD(x0,y,A, gamma, ProxSGD, ObjF);
 
 fprintf('\n');
 %% Prox-SGD, starting point 2
 fprintf(sprintf('performing Prox-SGD...\n'));
 x0 = 1e2* x1;
 
-[x3, its3, ek3, sk3] = func_ProxSGD(x0,y,A, gamma, ProxSGD);
+[x3, its3, ek3, sk3, fk3] = func_ProxSGD(x0,y,A, gamma, ProxSGD, ObjF);
 
 fprintf('\n');
+%%
+fsol = min(fk1);
+
+axesFontSize = 7;
+labelFontSize = 10;
+legendFontSize = 9;
+
+resolution = 300; % output resolution
+output_size = 300 *[12, 8]; % output size
+
+figure(111), clf;
+set(0,'DefaultAxesFontSize', axesFontSize);
+set(gcf,'paperunits','centimeters','paperposition',[-0.2 -0.0 output_size/resolution]);
+set(gcf,'papersize',output_size/resolution-[0.85 0.4]);
+
+p1 = semilogy(fk1-fsol, 'k', 'linewidth', 1);
+hold on;
+
+p2 = semilogy(fk2(1:1e3:end)-fsol, 'b', 'linewidth', 0.8);
+
+p3 = semilogy(fk3(1:1e3:end)-fsol, 'r', 'linewidth', 0.8);
 %% supp(xk)
 axesFontSize = 7;
 labelFontSize = 10;

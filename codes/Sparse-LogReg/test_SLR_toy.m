@@ -188,7 +188,7 @@ grid on;
 ax = gca;
 ax.GridLineStyle = '--';
 
-axis([1, max(its1, its2)/m, 1e-14, 1e-1]);
+axis([1, max(its1, its2)/m, 1e-12, 1e-1]);
 
 
 ylabel({'$\Phi(x_{k})-\Phi(x^\star)$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
@@ -201,7 +201,7 @@ lg = legend([p1,p1a, p2, p2a],...
 % set(lg,'Location', 'Best');
 set(lg,'FontSize', 10);
 legend('boxoff');
-set(lg, 'Interpreter', 'latex');
+% set(lg, 'Interpreter', 'latex');
 
 epsname = sprintf('toy_sagasvrg_slr_objf.%s', outputType);
 if strcmp(outputType, 'png')
@@ -244,7 +244,7 @@ lg = legend([p1,p2],...
 set(lg,'Location', 'Best');
 set(lg,'FontSize', 10);
 legend('boxoff');
-set(lg, 'Interpreter', 'latex');
+% set(lg, 'Interpreter', 'latex');
 
 epsname = sprintf('toy_sagasvrg_slr_sk.%s', outputType);
 if strcmp(outputType, 'png')

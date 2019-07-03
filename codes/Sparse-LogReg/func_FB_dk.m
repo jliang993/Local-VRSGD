@@ -23,8 +23,8 @@ x0 = zeros(n, 1);
 % 
 
 %%% obtain the minimizer x^\star
-dk = zeros(1, maxits);
-sk = zeros(1, maxits);
+dk = zeros(maxits, 1);
+sk = zeros(maxits, 1);
 
 x = x0; % xk
 

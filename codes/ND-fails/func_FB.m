@@ -5,8 +5,8 @@ ToL = 1e-14;
 
 x = x0;
 
-dk = zeros(1, maxits);
-sk = zeros(1, maxits);
+dk = zeros(maxits, 1);
+sk = zeros(maxits, 1);
 
 its = 1;
 while(its<maxits)

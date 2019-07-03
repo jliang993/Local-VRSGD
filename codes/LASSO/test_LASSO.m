@@ -7,7 +7,7 @@ strB = {'australian_sample.mat', 'mushrooms_sample.mat', 'gisette_sample.mat'};
 
 strF = {'australian', 'mushrooms', 'gisette'};
 
-i_file = 1;
+i_file = 2;
 %% load and scale data
 class_name = strA{i_file};
 feature_name = strB{i_file};
@@ -36,7 +36,7 @@ para.n = n;
 para.W = h;
 para.y = l;
 
-para.mu = 2e-1;
+para.mu = 1e-1;
 
 Li = zeros(m, 1);
 for i=1:m
@@ -70,14 +70,14 @@ para.c_gamma = 1/3;
 
 fprintf('\n');
 %% SVRG 
-para.c_gamma = 1/4;
+para.c_gamma = 1/3;
 para.P = m; % # for inner iteration
 
 [x2, its2, ek2, fk2, sk2, gk2] = func_SVRG(para, GradF,iGradF, ObjF);
 
 fprintf('\n');
 %% SVRG , adapt to local Lipschitz const.
-para.c_gamma = 1/4;
+para.c_gamma = 1/3;
 para.P = m; % # for inner iteration
 
 [x2a, its2a, ek2a, fk2a, sk2a, gk2a] = func_acc_SVRG(para, GradF,iGradF, ObjF);
@@ -160,7 +160,7 @@ grid on;
 ax = gca;
 ax.GridLineStyle = '--';
 
-axis([1, max(its1, its2)/m, 1e-8, 1e0]);
+axis([1, max(its1, its2)/m-20, 1e-12, 1e-1]);
 
 
 ylabel({'$\Phi(x_{k})-\Phi(x^\star)$'}, 'FontSize', labelFontSize, 'FontAngle', 'normal', 'Interpreter', 'latex');
@@ -168,10 +168,12 @@ xlabel({'\vspace{-0.0mm}';'$k/m$'}, 'FontSize', labelFontSize, 'FontAngle', 'nor
 
 
 lg = legend([p1,p1a, p2, p2a],...
-    sprintf('{SAGA}'), sprintf('{acc-SAGA}'),...
-    sprintf('{Prox-SVRG}'), sprintf('{acc-Prox-SVRG}'));
+    sprintf('{SAGA}, $$\\gamma=\\frac{1}{3L}$$'), sprintf('{acc-SAGA}'),...
+    sprintf('{Prox-SVRG}, $$\\gamma=\\frac{1}{3L}$$'), sprintf('{acc-Prox-SVRG}'));
+% lg = legend([p1,p2],...
+%     sprintf('{SAGA}, $$\\gamma=\\frac{1}{3L}$$'), sprintf('{Prox-SVRG}, $$\\gamma=\\frac{1}{3L}$$'));
 % set(lg,'Location', 'Best');
-set(lg,'FontSize', 10);
+set(lg,'FontSize', 12);
 legend('boxoff');
 set(lg, 'Interpreter', 'latex');
 
@@ -213,8 +215,8 @@ xlabel({'\vspace{-0.0mm}';'$k/m$'}, 'FontSize', labelFontSize, 'FontAngle', 'nor
 
 lg = legend([p1,p2],...
     sprintf('{SAGA}'), sprintf('{Prox-SVRG}'));
-set(lg,'Location', 'Best');
-set(lg,'FontSize', 10);
+% set(lg,'Location', 'Best');
+set(lg,'FontSize', 12);
 legend('boxoff');
 set(lg, 'Interpreter', 'latex');
 

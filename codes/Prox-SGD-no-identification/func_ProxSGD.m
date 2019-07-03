@@ -1,11 +1,12 @@
-function [x, its, ek, sk] = func_ProxSGD(x0,y,A, gamma, ProxSGD)
+function [x, its, ek, sk, fk] = func_ProxSGD(x0,y,A, gamma, ProxSGD, ObjF)
 itsprint(sprintf('      step %09d: norm(ek) = %.3e', 1,1), 1);
 
 maxits = 1e6 + 1;
 ToL = 1e-14;
 
-ek = zeros(1, maxits);
-sk = zeros(1, maxits);
+ek = zeros(maxits, 1);
+sk = zeros(maxits, 1);
+fk = zeros(maxits, 1);
 
 p = 0.51;
 
@@ -32,6 +33,7 @@ while(its<maxits)
     
     ek(its) = normE;
     sk(its) = sum(abs(x)>1e-15);
+    fk(its) = ObjF(x);
     
     its = its + 1;
     
@@ -41,3 +43,4 @@ fprintf('\n');
 its = its - 1;
 ek = ek(1:its);
 sk = sk(1:its);
+fk = fk(1:its);

@@ -70,7 +70,7 @@ while(t<maxits)
         sk(t) = sum(abs(x)>0);
         gk(t) = gamma;
         
-        if g_flag&&(mod(t, m)==0)&&(var(sk(t-m+1:t))<1)
+        if g_flag&&(mod(t, m)==0)&&(var(sk(t-m+1:t))<1e-2)
             PT = diag(double(abs(x)>0));
             WT = W*PT;
             b = zeros(m, 1);

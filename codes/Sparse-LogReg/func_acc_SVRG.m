@@ -72,7 +72,7 @@ while(its<maxits/m)
         gk(t) = gamma;
         ek(t) = distE;
                 
-        if (t>m)&&(mod(t, m)==0)&&(sk(t)<n/1.5)&&(var(sk(t-m+1:t-1))<1)
+        if (t>m)&&(mod(t, m)==0)&&(sk(t)<n/1.5)&&(var(sk(t-m+1:t-1))<1e-2)
             PT = diag(double(abs(x)>0));
             WT = W*PT;
             b = zeros(m, 1);
