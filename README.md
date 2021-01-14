@@ -4,7 +4,7 @@ Matlab code to reproduce the results of the paper
 
 [Local Convergence Properties of SAGA/Prox-SVRG and Beyond](http://proceedings.mlr.press/v80/poon18a.html)
 
-[Clarice Poon](http://www.damtp.cam.ac.uk/user/cmhsp2/), [Jingwei Liang](https://jliang993.github.io/), [Carola-Bibiane Schönlieb](http://www.damtp.cam.ac.uk/user/cbs31/Home.html), 2018
+[Clarice Poon](https://cmhsp2.github.io/), [Jingwei Liang](https://jliang993.github.io/), [Carola-Bibiane Schönlieb](http://www.damtp.cam.ac.uk/user/cbs31/Home.html), 2018
 
 
 
